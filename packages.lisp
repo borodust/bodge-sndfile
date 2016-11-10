@@ -8,4 +8,5 @@
   (:use :cl :autowrap :plus-c :alexandria)
   (:export with-open-sound-file
            sound-sample-rate
-           sound-channels))
+           sound-channels
+           read-short-samples-into-array))
