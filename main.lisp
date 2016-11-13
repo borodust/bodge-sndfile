@@ -6,12 +6,12 @@
     `(prog1
          (progn
            ,@body)
-       (when (/= (%sndfile:sf-error ,snd-file) %sndfile:+sf-err-no-error+)
-         (error (%sndfile:sf-strerror ,snd-file))))))
+       (when (/= (%sndfile:error ,snd-file) %sndfile:+err-no-error+)
+         (error (%sndfile:strerror ,snd-file))))))
 
 
 (defmacro with-sound-info ((var) &body body)
-  `(c-with ((,var %sndfile:sf-info))
+  `(c-with ((,var %sndfile:info))
      ,@body))
 
 
@@ -28,7 +28,8 @@
   (with-gensyms (sound-info file-handle)
     `(with-sound-info (,sound-info)
        (setf (,sound-info :format) 0)
-       (let* ((,file-handle (%sndfile:sf-open (namestring ,path) %sndfile:+sfm-read+ ,sound-info))
+       (let* ((,file-handle (%sndfile:open (namestring ,path)
+                                           %sndfile:+m-read+ ,sound-info))
               (,file (%make-sound-file ,file-handle
                                        (,sound-info :samplerate)
                                        (,sound-info :channels)
@@ -36,8 +37,7 @@
          (unwind-protect
               (%catch-sound-errors (,file-handle)
                 ,@body)
-           (%sndfile:sf-close ,file-handle))))))
-
+           (%sndfile:close ,file-handle))))))
 
 
 (defun read-short-samples-into-array (file)
@@ -47,7 +47,7 @@
          (samples-per-read (* frames-per-read (sound-channels file)))
          (buf-length samples-per-read))
     (with-alloc (buf :short buf-length)
-      (loop for samples-read = (%sndfile:sf-read-short (sound-handle file)
+      (loop for samples-read = (%sndfile:read-short (sound-handle file)
                                                        buf samples-per-read)
          until (= samples-read 0)
          for written = 0 then (+ written samples-read) do
