@@ -1,7 +1,8 @@
 (in-package :bodge-sndfile.def)
 
 
-(defpackage :%sndfile)
+(defpackage :%sndfile
+  (:use))
 
 
 (defpackage :bodge-sndfile
