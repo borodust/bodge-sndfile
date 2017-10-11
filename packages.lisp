@@ -6,7 +6,7 @@
 
 
 (defpackage :bodge-sndfile
-  (:use :cl :autowrap :plus-c :alexandria)
+  (:use :cl :bodge-autowrap :bodge-plus-c :alexandria)
   (:export with-open-sound-file
            sound-sample-rate
            sound-channels
