@@ -12,7 +12,7 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (alexandria cffi bodge-autowrap bodge-plus-c)
+  :depends-on (alexandria static-vectors cffi bodge-autowrap bodge-plus-c)
   :serial t
   :components ((:file "packages")
                (:file "libsndfile")
