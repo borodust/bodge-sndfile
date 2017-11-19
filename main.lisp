@@ -71,6 +71,7 @@
 (defstruct (virtual-file
              (:constructor %make-virtual-file))
   (data (static-vectors:make-static-vector 0) :type (simple-array (unsigned-byte 8) (*)))
+  (max-position 0 :type fixnum)
   (position 0 :type fixnum))
 
 
@@ -120,10 +121,17 @@
                 (virtual-file-position *virtual-file*))))
 
 
+(defun update-max-position ()
+  (when (> (virtual-file-position *virtual-file*)
+             (virtual-file-max-position *virtual-file*))
+    (setf (virtual-file-max-position *virtual-file*) (virtual-file-position *virtual-file*))))
+
+
 (defun replace-foreign-memory (src dst count)
   (let ((length (min-count count)))
     (static-vectors:replace-foreign-memory dst src length)
     (incf (virtual-file-position *virtual-file*) length)
+    (update-max-position)
     length))
 
 
@@ -144,7 +152,8 @@
     (when (> required-size
              (virtual-file-length *virtual-file*))
       (enlarge-virtual-file *virtual-file* required-size)))
-  (replace-foreign-memory ptr (static-vector-pointer) count))
+  (replace-foreign-memory ptr (static-vector-pointer) count)
+  count)
 
 
 (defcallback vio-tell %sndfile:count-t ((user-data :pointer))
@@ -188,29 +197,30 @@
                                                          (channels 2)
                                                          (sample-rate 48000))
   (let ((sndfile-format (ecase format
-                          (:flac %sndfile:+format-flac+))))
+                          (:flac (logior %sndfile:+format-pcm-16+ %sndfile:+format-flac+))
+                          #++(:ogg (logior %sndfile:+format-ogg+ %sndfile:+format-vorbis+))
+                          (:wav (logior %sndfile:+format-pcm-16+ %sndfile:+format-wav+)))))
     (c-with ((info %sndfile:info))
-      (setf (info :format) (logior %sndfile:+format-pcm-16+ sndfile-format)
+      (setf (info :format) sndfile-format
             (info :channels) channels
             (info :samplerate) sample-rate)
       (when (= 0 (%sndfile:format-check info))
         (error "Invalid format"))
-      (let* ((*virtual-file* (make-virtual-file :initial-size 0)))
+      (let* ((*virtual-file* (make-virtual-file :initial-size (length samples))))
         (with-virtual-io (vio)
           (let ((sndfile (%catch-sound-errors ()
                            (%sndfile:open-virtual vio
                                                   %sndfile:+m-write+
                                                   info
                                                   (cffi-sys:null-pointer)))))
-            (unwind-protect
-                 (static-vectors:with-static-vector (buf (length samples)
-                                                         :element-type '(signed-byte 16)
-                                                         :initial-contents samples)
-                   (%catch-sound-errors (sndfile)
-                     (%sndfile:write-short sndfile
-                                           (static-vectors:static-vector-pointer buf)
-                                           (length buf)))
-                   (let ((size (virtual-file-position *virtual-file*)))
-                     (write-sequence (virtual-file-data *virtual-file*) stream :end size)
-                     size))
-              (%sndfile:close sndfile))))))))
+            (static-vectors:with-static-vector (buf (length samples)
+                                                    :element-type '(signed-byte 16)
+                                                    :initial-contents samples)
+              (%catch-sound-errors (sndfile)
+                (%sndfile:write-short sndfile
+                                      (static-vectors:static-vector-pointer buf)
+                                      (length buf)))
+              (%sndfile:close sndfile)
+              (let ((size (virtual-file-max-position *virtual-file*)))
+                (write-sequence (virtual-file-data *virtual-file*) stream :end size)
+                size))))))))
