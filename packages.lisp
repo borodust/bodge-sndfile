@@ -11,4 +11,5 @@
            with-sound-file-from-stream
            sound-sample-rate
            sound-channels
-           read-short-samples-into-array))
+           read-short-samples-into-array
+           write-short-samples-into-stream))

@@ -4,13 +4,12 @@
 (declaim (special *virtual-file*))
 
 
-(defmacro %catch-sound-errors ((snd-file) &body body)
-  (once-only (snd-file)
-    `(prog1
-         (progn
-           ,@body)
-       (when (/= (%sndfile:error ,snd-file) %sndfile:+err-no-error+)
-         (error (%sndfile:strerror ,snd-file))))))
+(defmacro %catch-sound-errors ((&optional snd-file) &body body)
+  (let ((handle (or snd-file '(cffi:null-pointer))))
+    (once-only (handle)
+      `(prog1 (progn ,@body)
+         (when (/= (%sndfile:error ,handle) %sndfile:+err-no-error+)
+           (error "SNDFILE ERROR: ~A" (%sndfile:strerror ,handle)))))))
 
 
 (defmacro with-sound-info ((var) &body body)
@@ -57,7 +56,7 @@
          (buf-length samples-per-read))
     (with-alloc (buf :short buf-length)
       (loop for samples-read = (%sndfile:read-short (sound-handle file)
-                                                       buf samples-per-read)
+                                                    buf samples-per-read)
          until (= samples-read 0)
          for written = 0 then (+ written samples-read) do
            (loop for i from 0 below samples-read do
@@ -69,8 +68,9 @@
 ;;; Stream input/output
 ;;;
 
-(defstruct virtual-file
-  (data (static-vectors:make-static-vector 0) :type (simple-array (unsigned-byte 8) (*)) :read-only t)
+(defstruct (virtual-file
+             (:constructor %make-virtual-file))
+  (data (static-vectors:make-static-vector 0) :type (simple-array (unsigned-byte 8) (*)))
   (position 0 :type fixnum))
 
 
@@ -78,11 +78,27 @@
   (length (virtual-file-data virtual-file)))
 
 
+(defun enlarge-virtual-file (virtual-file required-size)
+  (let* ((new-size (ceiling (1+ (* (max required-size (virtual-file-length virtual-file)) 1.5))))
+         (new-data (static-vectors:make-static-vector new-size
+                                                      :element-type '(unsigned-byte 8)))
+         (old-data (virtual-file-data virtual-file)))
+    (static-vectors:replace-foreign-memory (static-vectors:static-vector-pointer new-data)
+                                           (static-vectors:static-vector-pointer old-data)
+                                           (virtual-file-length virtual-file))
+    (static-vectors:free-static-vector old-data)
+    (setf (virtual-file-data virtual-file) new-data)))
+
+
 (defun make-virtual-file-from-stream (stream)
   (let* ((byte-array (alexandria:read-stream-content-into-byte-vector stream))
          (static-byte-array (static-vectors:make-static-vector (length byte-array)
                                                                :initial-contents byte-array)))
-    (make-virtual-file :data static-byte-array)))
+    (%make-virtual-file :data static-byte-array)))
+
+
+(defun make-virtual-file (&key (initial-size 0))
+  (%make-virtual-file :data (static-vectors:make-static-vector initial-size)))
 
 
 (defcallback vio-get-file-length %sndfile:count-t ((user-data :pointer))
@@ -110,6 +126,7 @@
     (incf (virtual-file-position *virtual-file*) length)
     length))
 
+
 (defun static-vector-pointer ()
   (static-vectors:static-vector-pointer
    (virtual-file-data *virtual-file*)
@@ -123,6 +140,10 @@
 
 (defcallback vio-write %sndfile:count-t ((ptr :pointer) (count %sndfile:count-t) (user-data :pointer))
   (declare (ignore user-data))
+  (let ((required-size (+ (virtual-file-position *virtual-file*) count)))
+    (when (> required-size
+             (virtual-file-length *virtual-file*))
+      (enlarge-virtual-file *virtual-file* required-size)))
   (replace-foreign-memory ptr (static-vector-pointer) count))
 
 
@@ -141,6 +162,13 @@
     vio))
 
 
+(defmacro with-virtual-io ((vio) &body body)
+  `(let ((,vio (make-virtual-io)))
+     (unwind-protect
+          (progn ,@body)
+       (free ,vio))))
+
+
 (defmacro with-sound-file-from-stream ((file stream) &body body)
   (with-gensyms (virtual-io open-file)
     `(let* ((*virtual-file* (make-virtual-file-from-stream ,stream))
@@ -154,3 +182,35 @@
               (with-sound-file-handle (,file #',open-file)
                 ,@body))
          (free ,virtual-io)))))
+
+
+(defun write-short-samples-into-stream (stream samples &key (format :flac)
+                                                         (channels 2)
+                                                         (sample-rate 48000))
+  (let ((sndfile-format (ecase format
+                          (:flac %sndfile:+format-flac+))))
+    (c-with ((info %sndfile:info))
+      (setf (info :format) (logior %sndfile:+format-pcm-16+ sndfile-format)
+            (info :channels) channels
+            (info :samplerate) sample-rate)
+      (when (= 0 (%sndfile:format-check info))
+        (error "Invalid format"))
+      (let* ((*virtual-file* (make-virtual-file :initial-size 0)))
+        (with-virtual-io (vio)
+          (let ((sndfile (%catch-sound-errors ()
+                           (%sndfile:open-virtual vio
+                                                  %sndfile:+m-write+
+                                                  info
+                                                  (cffi-sys:null-pointer)))))
+            (unwind-protect
+                 (static-vectors:with-static-vector (buf (length samples)
+                                                         :element-type '(signed-byte 16)
+                                                         :initial-contents samples)
+                   (%catch-sound-errors (sndfile)
+                     (%sndfile:write-short sndfile
+                                           (static-vectors:static-vector-pointer buf)
+                                           (length buf)))
+                   (let ((size (virtual-file-position *virtual-file*)))
+                     (write-sequence (virtual-file-data *virtual-file*) stream :end size)
+                     size))
+              (%sndfile:close sndfile))))))))
