@@ -29,7 +29,7 @@
 (defmacro with-sound-file-handle ((file handle-ctor) &body body)
   (with-gensyms (sound-info handle)
     `(with-sound-info (,sound-info)
-       (let* ((,handle (funcall ,handle-ctor ,sound-info))
+       (let* ((,handle (%catch-sound-errors () (funcall ,handle-ctor ,sound-info)))
               (,file (%make-sound-file ,handle
                                        (,sound-info :samplerate)
                                        (,sound-info :channels)
