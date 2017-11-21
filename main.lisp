@@ -200,7 +200,7 @@
                           (:flac (logior %sndfile:+format-pcm-16+ %sndfile:+format-flac+))
                           #++(:ogg (logior %sndfile:+format-ogg+ %sndfile:+format-vorbis+))
                           (:wav (logior %sndfile:+format-pcm-16+ %sndfile:+format-wav+)))))
-    (c-with ((info %sndfile:info))
+    (c-with ((info %sndfile:info :calloc t))
       (setf (info :format) sndfile-format
             (info :channels) channels
             (info :samplerate) sample-rate)
