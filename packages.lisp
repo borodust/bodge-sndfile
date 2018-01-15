@@ -1,12 +1,9 @@
-(in-package :bodge-sndfile.def)
-
-
-(defpackage :%sndfile
+(cl:defpackage :%sndfile
   (:use))
 
 
-(defpackage :bodge-sndfile
-  (:use :cl :bodge-autowrap :bodge-plus-c :alexandria)
+(cl:defpackage :bodge-sndfile
+  (:use :cl :claw :alexandria)
   (:export with-open-sound-file
            with-sound-file-from-stream
            sound-sample-rate

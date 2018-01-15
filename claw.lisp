@@ -1,7 +1,4 @@
-(cl:in-package :bodge-sndfile)
-
-
-(bodge-autowrap:c-include "lib.h" :bodge-sndfile
+(claw:c-include "lib.h" :bodge-sndfile
  :package :%sndfile
  :include-sources ("sndfile.h")
  :include-definitions ("(sf|SF).?_\\w*")

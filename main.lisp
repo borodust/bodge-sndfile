@@ -54,13 +54,14 @@
          (frames-per-read (* 32 1024))
          (samples-per-read (* frames-per-read (sound-channels file)))
          (buf-length samples-per-read))
-    (with-alloc (buf :short buf-length)
+    (static-vectors:with-static-vector (buf buf-length :element-type '(signed-byte 16))
       (loop for samples-read = (%sndfile:read-short (sound-handle file)
-                                                    buf samples-per-read)
+                                                    (static-vectors:static-vector-pointer buf)
+                                                    samples-per-read)
          until (= samples-read 0)
          for written = 0 then (+ written samples-read) do
-           (loop for i from 0 below samples-read do
-                (setf (aref result (+ i written)) (c-aref buf i :short)))))
+           (loop for i from 0 below samples-read
+                 do (setf (aref result (+ i written)) (aref buf i)))))
     result))
 
 
@@ -136,9 +137,8 @@
 
 
 (defun static-vector-pointer ()
-  (static-vectors:static-vector-pointer
-   (virtual-file-data *virtual-file*)
-   :offset (virtual-file-position *virtual-file*)))
+  (static-vectors:static-vector-pointer (virtual-file-data *virtual-file*)
+                                        :offset (virtual-file-position *virtual-file*)))
 
 
 (defcallback vio-read %sndfile:count-t ((ptr :pointer) (count %sndfile:count-t) (user-data :pointer))
