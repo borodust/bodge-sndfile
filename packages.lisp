@@ -1,10 +1,13 @@
 (cl:defpackage :%sndfile
+  (:nicknames :%sf)
   (:use))
 
 
-(cl:defpackage :bodge-sndfile
+(cl:defpackage :sndfile
+  (:nicknames :sf)
   (:use :cl :claw :alexandria)
-  (:export with-open-sound-file
+  (:export libsndfile
+           with-open-sound-file
            with-sound-file-from-stream
            sound-sample-rate
            sound-channels

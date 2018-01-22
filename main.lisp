@@ -1,4 +1,4 @@
-(in-package :bodge-sndfile)
+(in-package :sndfile)
 
 
 (declaim (special *virtual-file*))

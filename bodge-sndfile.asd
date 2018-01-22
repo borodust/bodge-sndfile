@@ -1,6 +1,6 @@
 (asdf:defsystem bodge-sndfile
   :description "Wrapper over libsndfile for cl-bodge system"
-  :version "0.0.1"
+  :version "1.0.0"
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
@@ -8,7 +8,8 @@
   :serial t
   :components ((:file "packages")
                (:file "libsndfile")
-               (:static-file "lib.h")
+               (:static-file "bodge_sndfile.h")
                (:file "claw")
                (:file "main")
-               (:module spec)))
+               (:module spec)
+               (:module sndfile-includes :pathname "lib/sndfile/src/")))

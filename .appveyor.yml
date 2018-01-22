@@ -1,0 +1,57 @@
+image:
+  - Visual Studio 2017
+
+environment:
+  global:
+    NAME: sndfile
+  matrix:
+  - platform: x64
+    configuration: Release
+    ARCH: x86_64
+    VCPKG_TRIPLET: x64-windows
+    CMAKE_GENERATOR: Visual Studio 15 2017 Win64
+  - platform: x86
+    configuration: Release
+    ARCH: i686
+    VCPKG_TRIPLET: x86-windows
+    CMAKE_GENERATOR: Visual Studio 15 2017
+
+skip_non_tags: true
+
+branches:
+  only:
+    - master
+    - "/^v\\d+(\\.\\d+)+$/"
+
+install:
+  - vcpkg install libogg:%VCPKG_TRIPLET% libvorbis:%VCPKG_TRIPLET% libflac:%VCPKG_TRIPLET% sqlite3:%VCPKG_TRIPLET%
+  - git submodule update --init --recursive
+
+cache:
+  C:\Tools\vcpkg\Installed -> .appveyor.yml
+
+build_script:
+  - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
+  - mkdir lib\build\
+  - cd lib\build\
+  - cmake -G"%CMAKE_GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF -DBUILD_PROGRAMS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DENABLE_STATIC_RUNTIME=ON ..
+  - cmake --build . --config Release
+  - mv %APPVEYOR_BUILD_FOLDER%\lib\build\sndfile\Release\lib%NAME%.dll.bodged %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
+
+artifacts:
+  - path: $(TARGET_ARTIFACT)
+    name: target_artifact
+
+deploy:
+  provider: GitHub
+  release: $(APPVEYOR_REPO_TAG_NAME)
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  description: $(APPVEYOR_REPO_COMMIT_MESSAGE)
+  auth_token:
+    secure: Z5XWjDOBlCrmfz3SQAjnLKtdgI5B2b/owJhRPNWYGrI+qwVNbBc4cZiroBZReWP7
+  artifact: target_artifact
+  force_update: true
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true

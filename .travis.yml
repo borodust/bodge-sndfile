@@ -1,0 +1,71 @@
+language: c
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - gcc-multilib
+    - libogg-dev
+    - libvorbis-dev
+    - libflac-dev
+
+env:
+  global:
+    - NAME: sndfile
+    - secure: lN57i+2a2oJxWolGAs3ChFmuCIwyte027mTB35jBz270txR6oUApQ3HgDsk/yYTkIy1VvQZGRVpB412uPq3VuJeUoNHEXD1i6TknZj5EzuCJcrNFPBULZrkpaUQq3LSIKw/CwtPPnHT7czpOncijILwGlbHiYxpaaE71t1bkBD6NgO1Iu3Mx17PJRTM2GNJcu29RJb6fwTCYKIH88eQatAnY+6oNhhP30cMenm6rZbT8tu4YEq7xmBD1AkIR+hZsujnVLevudHPsDEgyXlJHwzT1IVhCZ8e/aHIgqxoAQZ4repWb3P2w5V1gJMtlkMo+VktIwtm8jZgKJj2tEpRRE4KmeH0pS8+0V7CqHkcqQhI/EByZwLW1RiaCC0JmMY2ZaWd6yjBfQQGPk9i0RX8VBrIkJwmtDHfbf9Lg3UzVUwNdnzF/IGjvrg0a9O6lI4kBDmZkRKb4kJeqdxk1oNAhAGFCRba33Mbff5qrf7H71wwMbIgcc6bpH0ISWn7qQ+MvcpabmLZ2Wem0RvYMIgTBLwCCKtbwnpiAuKHUhjv+khRNxoSHDnS42aDr+zfTcnOAX0AD17yJc5F7auB10LSD4PuiB10krTGRuyxhmtAV0qDOBRN/cJ4mbj3hyd76DxxwWulciZ7lYeQKiR5NGOmbdDYZOWW/5Z2ry7ci8taKBDM=
+
+matrix:
+  include:
+  - os: linux
+    env:
+      - ARCH=i686
+      - CFLAGS=-m32
+      - EXTENSION=so
+      - OUTPUT_FILE=lib$NAME.$EXTENSION.bodged
+  - os: linux
+    env:
+      - ARCH=x86_64
+      - CFLAGS=-m64
+      - EXTENSION=so
+      - OUTPUT_FILE=lib$NAME.$EXTENSION.bodged
+  - os: osx
+    env:
+      - ARCH=i686
+      - CFLAGS=-m32
+      - EXTENSION=dylib
+      - OUTPUT_FILE=lib$NAME.bodged.$EXTENSION
+  - os: osx
+    env:
+      - ARCH=x86_64
+      - CFLAGS=-m64
+      - EXTENSION=dylib
+      - OUTPUT_FILE=lib$NAME.bodged.$EXTENSION
+
+branches:
+  only:
+  - "/^v\\d+(\\.\\d+)+$/"
+
+
+script:
+  - >
+    cd lib/ && cmake -G "Unix Makefiles" \
+      -DCMAKE_C_FLAGS=$(ENV_CFLAGS) \
+      -DBUILD_STATIC_LIBS=OFF \
+      -DBUILD_PROGRAMS=OFF \
+      -DBUILD_EXAMPLES=OFF \
+      -DBUILD_TESTING=OFF \
+      -DENABLE_STATIC_RUNTIME=ON . && \
+      make
+
+before_deploy:
+  - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
+  - mv $TRAVIS_BUILD_DIR/lib/sndfile/$OUTPUT_FILE $TARGET_FILE
+
+deploy:
+  provider: releases
+  api-key: $GITHUB_TOKEN
+  file: $TARGET_FILE
+  skip_cleanup: true
+  overwrite: true
+  on:
+    tags: true
