@@ -9,7 +9,8 @@
     (once-only (handle)
       `(prog1 (progn ,@body)
          (when (/= (%sndfile:error ,handle) %sndfile:+err-no-error+)
-           (error "SNDFILE ERROR: ~A" (%sndfile:strerror ,handle)))))))
+           (error "SNDFILE ERROR: ~A" (cffi:foreign-string-to-lisp
+                                       (%sndfile:strerror ,handle))))))))
 
 
 (defmacro with-sound-info ((var) &body body)
