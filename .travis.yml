@@ -45,6 +45,12 @@ branches:
   only:
   - "/^v\\d+(\\.\\d+)+$/"
 
+before_install:
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      brew update
+      brew install libogg libvorbis flac
+    fi
 
 script:
   - >

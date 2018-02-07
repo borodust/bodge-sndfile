@@ -8,12 +8,12 @@ environment:
   - platform: x64
     configuration: Release
     ARCH: x86_64
-    VCPKG_TRIPLET: x64-windows
+    VCPKG_TRIPLET: x64-windows-static
     CMAKE_GENERATOR: Visual Studio 15 2017 Win64
   - platform: x86
     configuration: Release
     ARCH: i686
-    VCPKG_TRIPLET: x86-windows
+    VCPKG_TRIPLET: x86-windows-static
     CMAKE_GENERATOR: Visual Studio 15 2017
 
 skip_non_tags: true
@@ -34,7 +34,7 @@ build_script:
   - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
   - mkdir lib\build\
   - cd lib\build\
-  - cmake -G"%CMAKE_GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF -DBUILD_PROGRAMS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DENABLE_STATIC_RUNTIME=ON ..
+  - cmake -G"%CMAKE_GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF -DBUILD_PROGRAMS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DENABLE_STATIC_RUNTIME=ON -DVCPKG_TARGET_TRIPLET=%VCPKG_TRIPLET% -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake ..
   - cmake --build . --config Release
   - mv %APPVEYOR_BUILD_FOLDER%\lib\build\sndfile\Release\lib%NAME%.dll.bodged %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
 
