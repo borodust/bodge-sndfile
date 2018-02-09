@@ -1,5 +1,6 @@
 BIN = libsndfile
 
+SUDO ?= sudo
 INSTALL_XIPH_LIBS ?= false
 CCFLAGS := $(CFLAGS) -std=c99 -pedantic -O2 -fPIC -I../ -Isndfile/src/ -Lsndfile/src/.libs/ -Logg/src/.libs/ -Lflac/src/libFLAC/.libs/ -Lvorbis/lib/.libs/
 
@@ -8,6 +9,7 @@ SRC =
 OBJ = $(SRC:.c=.o)
 LIBS = -lm
 STATIC_LIBS = -logg -lvorbisenc -lvorbis -lFLAC -lsndfile
+WORK_DIR = "$(abspath $(dir $(lastword $(MAKEFILE_LIST))))"
 
 ifeq ($(OS),Windows_NT)
 	BIN := $(BIN).dll.bodged
@@ -32,25 +34,30 @@ build: $(BIN)
 $(BIN):
 	cd ogg/ &&										\
 	./autogen.sh &&										\
-	./configure --enable-static --disable-shared --with-pic &&				\
-	make && ($(INSTALL_XIPH_LIBS) && sudo make install || true)
+	./configure --enable-static --disable-shared --with-pic --host=$(HOST) &&		\
+	make && ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
 
 	cd vorbis/ &&										\
 	./autogen.sh &&										\
 	./configure --enable-static --disable-shared --disable-docs --disable-examples		\
-		    --with-pic &&								\
-	make && ($(INSTALL_XIPH_LIBS) && sudo make install || true)
+		    --with-pic --host=$(HOST)							\
+		    --with-ogg-libraries=$(WORK_DIR)/ogg/src/.libs/ 				\
+		    --with-ogg-includes=$(WORK_DIR)/ogg/include &&				\
+	make && ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
 
 	cd flac/ &&										\
 	./autogen.sh &&										\
 	./configure --enable-static --disable-shared --disable-thorough-tests			\
-		    --disable-doxygen-docs --disable-examples --disable-cpplibs --with-pic &&	\
-	make && ($(INSTALL_XIPH_LIBS) && sudo make install || true)
+		    --disable-doxygen-docs --disable-examples --disable-cpplibs			\
+		    --with-pic --disable-oggtest --host=$(HOST)					\
+		    --with-ogg-libraries=$(WORK_DIR)/ogg/src/.libs/ 				\
+		    --with-ogg-includes=$(WORK_DIR)/ogg/include &&				\
+	make && ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
 
 	cd sndfile/ && 										\
 	./autogen.sh &&										\
 	./configure --disable-sqlite3 --disable-shared --disable-full-suite --disable-alsa	\
-		    --with-pic &&								\
+		    --with-pic --host=$(HOST) &&						\
 	make
 
 	$(CC) -shared $(SRC) $(CCFLAGS) -o $(BIN) $(LFLAGS)

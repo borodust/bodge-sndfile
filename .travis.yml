@@ -61,7 +61,7 @@ before_install:
     fi
 
 script:
-  - cd lib/ && make
+  - cd lib/ && make clean build
 
 before_deploy:
   - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
