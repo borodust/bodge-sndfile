@@ -29,7 +29,7 @@ install:
 
 build_script:
   - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
-  - pacman -S --needed --noconfirm base-devel mingw-w64-%ARCH%-toolchain mingw-w64-%ARCH%-libogg mingw-w64-%ARCH%-libvorbis mingw-w64-%ARCH%-flac autogen nasm
+  - pacman -S --needed --noconfirm base-devel mingw-w64-%ARCH%-toolchain autogen nasm
   - sh -c "cd lib/ && make CFLAGS=%CFLAGS% INSTALL_XIPH_LIBS=true SUDO= clean build"
   - mv %APPVEYOR_BUILD_FOLDER%\lib\lib%NAME%.dll.bodged %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
 
