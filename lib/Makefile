@@ -4,7 +4,6 @@ SUDO ?= sudo
 INSTALL_XIPH_LIBS ?= false
 CCFLAGS := $(CFLAGS) -std=c99 -pedantic -O2 -fPIC -I../ -Isndfile/src/ -Lsndfile/src/.libs/ -Logg/src/.libs/ -Lflac/src/libFLAC/.libs/ -Lvorbis/lib/.libs/
 
-
 SRC =
 OBJ = $(SRC:.c=.o)
 LIBS = -lm
@@ -31,15 +30,19 @@ endif
 build: $(BIN)
 
 
-$(BIN):
+$(BIN): build_sndfile
+	$(CC) -shared $(SRC) $(CCFLAGS) -o $(BIN) $(LFLAGS)
+
+build_xiph:
 	cd ogg/ &&										\
 	./autogen.sh &&										\
-	./configure --enable-static --disable-shared --with-pic --build=$(HOST) &&		\
+	./configure --enable-static --disable-shared --with-pic --build=$(HOST)			\
+		    --prefix=$(PREFIX) &&							\
 	make && ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
 
 	cd vorbis/ &&										\
 	./autogen.sh --enable-static --disable-shared --disable-docs --disable-examples		\
-		     --with-pic --disable-oggtest --build=$(HOST)				\
+		     --with-pic --disable-oggtest --build=$(HOST) --prefix=$(PREFIX)		\
 		     --with-ogg-libraries=$(WORK_DIR)/ogg/src/.libs/ 				\
 		     --with-ogg-includes=$(WORK_DIR)/ogg/include &&				\
 	make && ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
@@ -48,18 +51,17 @@ $(BIN):
 	./autogen.sh &&										\
 	./configure --enable-static --disable-shared --disable-thorough-tests			\
 		    --disable-doxygen-docs --disable-examples --disable-cpplibs			\
-		    --with-pic --disable-oggtest --build=$(HOST)				\
+		    --with-pic --disable-oggtest --build=$(HOST) --prefix=$(PREFIX)		\
 		    --with-ogg-libraries=$(WORK_DIR)/ogg/src/.libs/ 				\
 		    --with-ogg-includes=$(WORK_DIR)/ogg/include &&				\
 	make && ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
 
+build_sndfile: build_xiph
 	cd sndfile/ && 										\
 	./autogen.sh &&										\
 	./configure --disable-sqlite3 --disable-shared --disable-full-suite --disable-alsa	\
 		    --with-pic --host=$(HOST) &&						\
 	make
-
-	$(CC) -shared $(SRC) $(CCFLAGS) -o $(BIN) $(LFLAGS)
 
 clean:
 	git submodule foreach git clean -fdx
