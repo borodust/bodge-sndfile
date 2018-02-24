@@ -1,4 +1,4 @@
-(in-package :sndfile)
+(cl:in-package :sndfile)
 
 
 (declaim (special *virtual-file*))
