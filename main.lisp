@@ -131,7 +131,7 @@
 
 (defun replace-foreign-memory (src dst count)
   (let ((length (min-count count)))
-    (static-vectors:replace-foreign-memory dst src length)
+    (claw:memcpy dst src :n length :type :char)
     (incf (virtual-file-position *virtual-file*) length)
     (update-max-position)
     length))
