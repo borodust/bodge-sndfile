@@ -1,8 +1,3 @@
-(cl:defpackage :%sndfile
-  (:nicknames :%sf)
-  (:use))
-
-
 (cl:defpackage :sndfile
   (:nicknames :sf)
   (:use :cl :claw :alexandria)

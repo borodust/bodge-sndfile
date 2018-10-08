@@ -1,5 +1,5 @@
 (claw:c-include "bodge_sndfile.h" :bodge-sndfile
-  :in-package :%sndfile
+  :in-package (:%sndfile :%sf)
   :sysincludes (:sndfile-includes)
   :include-sources ("sndfile.h")
   :include-definitions ("(sf|SF).?_\\w*")
