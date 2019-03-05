@@ -13,7 +13,7 @@
   "Native example reading metadata with thin API"
   (claw:c-with ((sf-info %sf:info :calloc t))
     (let ((sf-file (%sf:open *sample-file* %sf:+m-read+ (sf-info &))))
-      (when (claw:wrapper-null-p sf-file)
+      (when (claw:null-pointer-p sf-file)
         (error "Failed to open sound file ~A: ~A" *sample-file* (%sf:strerror sf-file)))
       (flet ((get-string (tag)
                (cffi:foreign-string-to-lisp
