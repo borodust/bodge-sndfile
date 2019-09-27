@@ -1,19 +1,20 @@
 (cl:defpackage :sndfile.example
-  (:use :cl)
+  (:use :cl :cffi-c-ref)
   (:export run
            decode))
 (cl:in-package :sndfile.example)
 
 ;; original: https://freesound.org/people/waveplay/sounds/213725/
-(defvar *sample-file* (namestring
-                       (asdf:system-relative-pathname :bodge-sndfile/example "sample.ogg")))
+(defparameter *sample-file* (namestring
+                             (asdf:system-relative-pathname :bodge-sndfile/example
+                                                            "example/sample.ogg")))
 
 
 (defun run ()
   "Native example reading metadata with thin API"
-  (claw:c-with ((sf-info %sf:info :calloc t))
+  (c-with ((sf-info %sf:info :clear t))
     (let ((sf-file (%sf:open *sample-file* %sf:+m-read+ (sf-info &))))
-      (when (claw:null-pointer-p sf-file)
+      (when (cffi:null-pointer-p sf-file)
         (error "Failed to open sound file ~A: ~A" *sample-file* (%sf:strerror sf-file)))
       (flet ((get-string (tag)
                (cffi:foreign-string-to-lisp
