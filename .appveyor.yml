@@ -32,8 +32,8 @@ install:
 build_script:
   - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
   - pacman -S --needed --noconfirm base-devel mingw-w64-%ARCH%-toolchain mingw-w64-%ARCH%-pkg-config autogen nasm
-  - sh -c "cd lib/ && make CFLAGS=%CFLAGS% INSTALL_XIPH_LIBS=true SUDO= PREFIX=/mingw%BITNESS%/ clean build"
-  - mv %APPVEYOR_BUILD_FOLDER%\lib\lib%NAME%.dll.bodged %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
+  - sh -c "cd src/lib/ && make CFLAGS=%CFLAGS% INSTALL_XIPH_LIBS=true SUDO= PREFIX=/mingw%BITNESS%/ clean build"
+  - mv %APPVEYOR_BUILD_FOLDER%\src\lib\lib%NAME%.dll.bodged %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
 
 artifacts:
   - path: $(TARGET_ARTIFACT)

@@ -1,12 +1,12 @@
 [submodule "lib/sndfile"]
-	path = lib/sndfile
+	path = src/lib/sndfile
 	url = https://github.com/erikd/libsndfile.git
 [submodule "lib/flac"]
-	path = lib/flac
+	path = src/lib/flac
 	url = https://github.com/xiph/flac.git
 [submodule "lib/ogg"]
-	path = lib/ogg
+	path = src/lib/ogg
 	url = https://github.com/xiph/ogg.git
 [submodule "lib/vorbis"]
-	path = lib/vorbis
+	path = src/lib/vorbis
 	url = https://github.com/xiph/vorbis.git

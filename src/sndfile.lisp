@@ -14,7 +14,7 @@
 
 
 (defmacro with-sound-info ((var) &body body)
-  `(c-with ((,var %sndfile:info :calloc t))
+  `(c-with ((,var %sndfile:info :clear t))
      ,@body))
 
 
@@ -104,12 +104,14 @@
   (%make-virtual-file :data (static-vectors:make-static-vector initial-size)))
 
 
-(defcallback vio-get-file-length %sndfile:count-t ((user-data :pointer))
+(cffi:defcallback vio-get-file-length %sndfile:count-t ((user-data :pointer))
   (declare (ignore user-data))
   (virtual-file-length *virtual-file*))
 
 
-(defcallback vio-seek %sndfile:count-t ((offset %sndfile:count-t) (whence :int) (user-data :pointer))
+(cffi:defcallback vio-seek %sndfile:count-t ((offset %sndfile:count-t)
+                                             (whence :int)
+                                             (user-data :pointer))
   (declare (ignore user-data))
   (eswitch (whence)
     (%sndfile:+seek-cur+ (incf (virtual-file-position *virtual-file*) offset))
@@ -131,7 +133,7 @@
 
 (defun replace-foreign-memory (src dst count)
   (let ((length (min-count count)))
-    (claw:memcpy dst src length)
+    (%libc.es:memcpy dst src length)
     (incf (virtual-file-position *virtual-file*) length)
     (update-max-position)
     length))
@@ -142,12 +144,16 @@
                                         :offset (virtual-file-position *virtual-file*)))
 
 
-(defcallback vio-read %sndfile:count-t ((ptr :pointer) (count %sndfile:count-t) (user-data :pointer))
+(cffi:defcallback vio-read %sndfile:count-t ((ptr :pointer)
+                                             (count %sndfile:count-t)
+                                             (user-data :pointer))
   (declare (ignore user-data))
   (replace-foreign-memory (static-vector-pointer) ptr count))
 
 
-(defcallback vio-write %sndfile:count-t ((ptr :pointer) (count %sndfile:count-t) (user-data :pointer))
+(cffi:defcallback vio-write %sndfile:count-t ((ptr :pointer)
+                                              (count %sndfile:count-t)
+                                              (user-data :pointer))
   (declare (ignore user-data))
   (let ((required-size (+ (virtual-file-position *virtual-file*) count)))
     (when (> required-size
@@ -157,18 +163,18 @@
   count)
 
 
-(defcallback vio-tell %sndfile:count-t ((user-data :pointer))
+(cffi:defcallback vio-tell %sndfile:count-t ((user-data :pointer))
   (declare (ignore user-data))
   (virtual-file-position *virtual-file*))
 
 
 (defun make-virtual-io ()
-  (c-let ((vio %sndfile:virtual-io :calloc t))
-    (setf (vio :get-filelen) (callback 'vio-get-file-length)
-          (vio :seek) (callback 'vio-seek)
-          (vio :read) (callback 'vio-read)
-          (vio :write) (callback 'vio-write)
-          (vio :tell) (callback 'vio-tell))
+  (c-let ((vio %sndfile:virtual-io :alloc t :clear t))
+    (setf (vio :get-filelen) (cffi:callback vio-get-file-length)
+          (vio :seek) (cffi:callback vio-seek)
+          (vio :read) (cffi:callback vio-read)
+          (vio :write) (cffi:callback vio-write)
+          (vio :tell) (cffi:callback vio-tell))
     vio))
 
 
@@ -176,7 +182,7 @@
   `(let ((,vio (make-virtual-io)))
      (unwind-protect
           (progn ,@body)
-       (free ,vio))))
+       (cffi:foreign-free ,vio))))
 
 
 (defmacro with-sound-file-from-stream ((file stream) &body body)
@@ -191,7 +197,7 @@
                                             (cffi-sys:null-pointer))))
               (with-sound-file-handle (,file #',open-file)
                 ,@body))
-         (free ,virtual-io)))))
+         (cffi:foreign-free ,virtual-io)))))
 
 
 (defun write-short-samples-into-stream (stream samples &key (format :flac)
@@ -201,7 +207,7 @@
                           (:flac (logior %sndfile:+format-pcm-16+ %sndfile:+format-flac+))
                           #++(:ogg (logior %sndfile:+format-ogg+ %sndfile:+format-vorbis+))
                           (:wav (logior %sndfile:+format-pcm-16+ %sndfile:+format-wav+)))))
-    (c-with ((info %sndfile:info :calloc t))
+    (c-with ((info %sndfile:info :clear t))
       (setf (info :format) sndfile-format
             (info :channels) channels
             (info :samplerate) sample-rate)
