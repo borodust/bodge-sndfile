@@ -10,3 +10,6 @@
 [submodule "lib/vorbis"]
 	path = src/lib/vorbis
 	url = https://github.com/xiph/vorbis.git
+[submodule "src/lib/opus"]
+	path = src/lib/opus
+	url = https://github.com/xiph/opus.git

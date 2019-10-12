@@ -15,7 +15,8 @@
   (c-with ((sf-info %sf:info :clear t))
     (let ((sf-file (%sf:open *sample-file* %sf:+m-read+ (sf-info &))))
       (when (cffi:null-pointer-p sf-file)
-        (error "Failed to open sound file ~A: ~A" *sample-file* (%sf:strerror sf-file)))
+        (error "Failed to open sound file ~A: ~A" *sample-file*
+               (cffi:foreign-string-to-lisp (%sf:strerror sf-file))))
       (flet ((get-string (tag)
                (cffi:foreign-string-to-lisp
                 (%sf:get-string sf-file tag))))
