@@ -78,8 +78,9 @@ build_xiph:
 build_sndfile: build_xiph
 	cd sndfile/ \
 	&& ./autogen.sh \
-	&& ./configure --disable-sqlite3 --disable-shared --disable-full-suite --disable-alsa \
-		    --with-pic --host=$(HOST) \
+	&& ./configure --disable-sqlite3 --disable-shared --disable-full-suite \
+		--disable-alsa \
+		--with-pic --host=$(HOST) \
 	&& make
 
 clean:

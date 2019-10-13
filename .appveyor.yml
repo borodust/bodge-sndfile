@@ -5,6 +5,7 @@ environment:
   global:
     NAME: sndfile
     ASDF_SYSTEM: bodge-sndfile
+    INSTALL_XIPH_LIBS: true
   matrix:
   - platform: x64
     HOST: x86_64-w64-mingw32
