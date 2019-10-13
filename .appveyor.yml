@@ -18,6 +18,7 @@ environment:
     CFLAGS: -m32
     BITNESS: 32
     PATH: C:\msys64\mingw32\i686-w64-mingw32\bin\;C:\msys64\mingw32\bin\;C:\msys64\usr\bin\;$(PATH)
+    BODGE_DISABLE_OPTIMIZATIONS: true
 
 skip_non_tags: true
 
@@ -37,7 +38,8 @@ build_script:
   - >
     sh -c "
     cd src/lib/
-    && make CFLAGS=%CFLAGS% SUDO= PREFIX=/mingw%BITNESS%/ clean build
+    && make CFLAGS=%CFLAGS% SUDO= PREFIX=/mingw%BITNESS%/
+    BODGE_DISABLE_OPTIMIZATIONS=%BODGE_DISABLE_OPTIMIZATIONS% clean build
     && ~/.bodge/bin/lisp regen-local-spec-and-zip --arch %TARGET_ARCH% \"$(cygpath -u '%APPVEYOR_BUILD_FOLDER%')\" %ASDF_SYSTEM% \"$(cygpath -u '%APPVEYOR_BUILD_FOLDER%\%TARGET_SPEC%')\""
   - mv %APPVEYOR_BUILD_FOLDER%\src\lib\lib%NAME%.dll.bodged %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
 

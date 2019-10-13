@@ -4,6 +4,12 @@ SUDO ?= sudo
 INSTALL_XIPH_LIBS ?= false
 CCFLAGS := $(CFLAGS) -std=c99 -pedantic -O2 -fPIC -I../ -Isndfile/src/ -Lsndfile/src/.libs/ -Logg/src/.libs/ -Lflac/src/libFLAC/.libs/ -Lvorbis/lib/.libs/ -Lopus/.libs/
 
+
+ifeq ($(BODGE_DISABLE_OPTIMIZATIONS),true)
+BODGE_OPUS_OPTIMIZATIONS = --disable-intrinsics
+endif
+
+
 SRC =
 OBJ = $(SRC:.c=.o)
 LIBS = -lm
@@ -64,6 +70,7 @@ build_xiph:
 	cd opus/ \
 	&& ./autogen.sh \
 	&& ./configure X86_SSE4_1_CFLAGS="" X86_AVX_CFLAGS="" \
+		$(BODGE_OPUS_OPTIMIZATIONS) \
 		--enable-static --disable-shared --disable-extra-programs \
 		--disable-doc --with-pic --build=$(HOST) --prefix=$(PREFIX) \
 	&& make && ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
