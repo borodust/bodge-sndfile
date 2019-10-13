@@ -13,7 +13,6 @@ addons:
 env:
   global:
     - NAME: sndfile
-    - INSTALL_XIPH_LIBS: true
     - ASDF_SYSTEM: bodge-sndfile
     - PATH: ~/.bodge/bin/:$PATH
     - secure: "t7b6x1D2fuCxqe49bPj33VsBISKqUFyqv+QNSrasCN/Qj0plkfuD/hK0FwfB14tlKyZMz1iuE9fy9GbpE+ZevHKq0ZxBSrrqQfZulBm0eKhuCesX/AAS/dUA0cfznzTqu1EQuqfymDGhViLNzi+FK7BgiFmXlxTrKFWjSQcu76cjMY4lxpK4hfAOCUFDDvXedr53aYO9lW3kOZqmZ09jAyjvKsLuMsqVQJ73+duboefxnlHA+ziIIYBSdzAjqYloSf5RKi16DGd57jZoZDCi4JkIwNk5idWYmjnfPj3jseq5Opoud0LtiO/1fgQEgJFuOHPv2HGjBAyPa7aHcPYjYErhA9Hu2zBSqgtVS3TaaQlOtB/eVX2ImuxaNo+24HrfCEcVj+Gi9w0ZMeaEhpy3Hd0C+rU5cIYu8t6kLe5A8C3QzJ3nxEzIWpMhPSMzxfdw9ywRlWtmMwc5cHvXWvBC0r8ZzRTfl1OWDp8/6UoVqkeJZ6hVGxhuCJh6rm0Bgg1HxOR+VsczhnmHyD3zRzQ3LdzRWMcGKB03NXXzS5KK1DTEi2sbKtXobytzuzjALyQEhEONz2D8CgisMDM0alU4nXyugqSub7b2UcCrMObr7aniH0RP8NOgXxsa8mYmpl3UKk6SF9hW1Rlp/RzDeB++BsUuCbKb6RfonJtVGH/n89c="

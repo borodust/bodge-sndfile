@@ -37,7 +37,7 @@ build_script:
   - >
     sh -c "
     cd src/lib/
-    && make CFLAGS=%CFLAGS% INSTALL_XIPH_LIBS=true SUDO= PREFIX=/mingw%BITNESS%/ clean build
+    && make CFLAGS=%CFLAGS% SUDO= PREFIX=/mingw%BITNESS%/ clean build
     && ~/.bodge/bin/lisp regen-local-spec-and-zip --arch %TARGET_ARCH% \"$(cygpath -u '%APPVEYOR_BUILD_FOLDER%')\" %ASDF_SYSTEM% \"$(cygpath -u '%APPVEYOR_BUILD_FOLDER%\%TARGET_SPEC%')\""
   - mv %APPVEYOR_BUILD_FOLDER%\src\lib\lib%NAME%.dll.bodged %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
 
