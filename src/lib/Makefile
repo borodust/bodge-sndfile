@@ -32,22 +32,22 @@ build: $(BIN)
 
 $(BIN): build_sndfile
 	$(CC) -shared $(SRC) $(CCFLAGS) -o $(BIN) $(LFLAGS)
-	strip --strip-debug $(BIN)
+	strip -S $(BIN)
 
 build_xiph:
 	cd ogg/ \
 	&& ./autogen.sh \
 	&& ./configure --enable-static --disable-shared --with-pic --build=$(HOST) \
-		    --prefix=$(PREFIX) \
+			--prefix=$(PREFIX) \
 	&& make \
-	&& ($(INSTALL_XIPH_LIBS) \
-	&& $(SUDO) make install || true)
+	&& ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
 
 	cd vorbis/ \
-	&& ./autogen.sh --enable-static --disable-shared --disable-docs --disable-examples \
-		     --with-pic --disable-oggtest --build=$(HOST) --prefix=$(PREFIX) \
-		     --with-ogg-libraries=$(WORK_DIR)/ogg/src/.libs/ \
-		     --with-ogg-includes=$(WORK_DIR)/ogg/include \
+	&& ./autogen.sh --enable-static --disable-shared --disable-docs \
+			--disable-examples \
+			--with-pic --disable-oggtest --build=$(HOST) --prefix=$(PREFIX) \
+			--with-ogg-libraries=$(WORK_DIR)/ogg/src/.libs/ \
+			--with-ogg-includes=$(WORK_DIR)/ogg/include \
 	&& make \
 	&& ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
 
