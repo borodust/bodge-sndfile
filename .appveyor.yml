@@ -35,7 +35,7 @@ install:
 build_script:
   - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%TARGET_ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
   - set TARGET_SPEC=%TARGET_ARTIFACT%-spec.zip
-  - pacman -S --needed --noconfirm base-devel mingw-w64-%TARGET_ARCH%-toolchain mingw-w64-%TARGET_ARCH%-pkg-config autogen nasm zip unzip
+  - pacman -S --needed --noconfirm base-devel mingw-w64-%TARGET_ARCH%-toolchain mingw-w64-%TARGET_ARCH%-pkg-config mingw-w64-%TARGET_ARCH%-cmake autogen nasm zip unzip
   - >
     sh -c "
     cd src/lib/

@@ -13,7 +13,7 @@
                (:file "claw")
                (:file "sndfile")
                (:module :spec)
-               (:module :sndfile-includes :pathname "lib/sndfile/src/")))
+               (:module :sndfile-includes :pathname "lib/sndfile/build/src/")))
 
 
 (asdf:defsystem :bodge-sndfile/example

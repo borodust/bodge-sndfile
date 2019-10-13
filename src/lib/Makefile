@@ -2,7 +2,7 @@ BIN = libsndfile
 
 SUDO ?= sudo
 INSTALL_XIPH_LIBS ?= false
-CCFLAGS := $(CFLAGS) -std=c99 -pedantic -O2 -fPIC -I../ -Isndfile/src/ -Lsndfile/src/.libs/ -Logg/src/.libs/ -Lflac/src/libFLAC/.libs/ -Lvorbis/lib/.libs/ -Lopus/.libs/
+CCFLAGS := $(CFLAGS) -std=c99 -pedantic -O2 -fPIC -I../ -Isndfile/src/ -Lsndfile/build/ -Logg/src/.libs/ -Lflac/src/libFLAC/.libs/ -Lvorbis/lib/.libs/ -Lopus/.libs/
 
 
 ifeq ($(BODGE_DISABLE_OPTIMIZATIONS),true)
@@ -73,15 +73,18 @@ build_xiph:
 		$(BODGE_OPUS_OPTIMIZATIONS) \
 		--enable-static --disable-shared --disable-extra-programs \
 		--disable-doc --with-pic --build=$(HOST) --prefix=$(PREFIX) \
-	&& make && ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
+	&& make \
+	&& ($(INSTALL_XIPH_LIBS) && $(SUDO) make install || true)
 
 build_sndfile: build_xiph
 	cd sndfile/ \
-	&& ./autogen.sh \
-	&& ./configure --disable-sqlite3 --disable-shared --disable-full-suite \
-		--disable-alsa \
-		--with-pic --host=$(HOST) \
-	&& make
+	&& mkdir build && cd build \
+	&& cmake -G"Unix Makefiles" \
+		-DENABLE_EXTERNAL_LIBS=ON -DBUILD_SHARED_LIBS=OFF \
+		-DBUILD_EXAMPLES=OFF -DBUILD_PROGRAMS=OFF -DBUILD_TESTING=OFF \
+		-DBUILD_REGTEST=OFF \
+		-DENABLE_STATIC_RUNTIME=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON .. \
+	&& cmake --build .
 
 clean:
 	git submodule foreach git clean -ffdx

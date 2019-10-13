@@ -9,6 +9,7 @@ addons:
     - g++-multilib
     - autogen
     - libtool-bin
+    - cmake
 
 env:
   global:
