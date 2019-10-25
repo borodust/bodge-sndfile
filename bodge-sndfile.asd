@@ -9,7 +9,6 @@
   :serial t
   :pathname "src/"
   :components ((:file "packages")
-               (:static-file "bodge_sndfile.h")
                (:file "claw")
                (:file "sndfile")
                (:module :spec)

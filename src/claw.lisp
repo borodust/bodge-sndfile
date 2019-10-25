@@ -4,6 +4,7 @@
 
 
 (claw:defwrapper (sndfile::bodge-sndfile
+                  (:headers "sndfile.h")
                   (:includes :sndfile-includes)
                   (:include-definitions "(sf|SF).?_\\w*"))
   :in-package :%sndfile
