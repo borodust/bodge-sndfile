@@ -22,11 +22,11 @@ else
 endif
 
 SNDFILE_BIN := $(NAME).$(EXTENSION)
-OGG_BIN := libogg.$(EXTENSION)
-VORBIS_BIN := libvorbis.$(EXTENSION)
-VORBISENC_BIN := libvorbisenc.$(EXTENSION)
-FLAC_BIN := libFLAC.$(EXTENSION)
-OPUS_BIN := libopus.$(EXTENSION)
+OGG_BIN := libogg.$(EXTENSION).0
+VORBIS_BIN := libvorbis.$(EXTENSION).0
+VORBISENC_BIN := libvorbisenc.$(EXTENSION).2
+FLAC_BIN := libFLAC.$(EXTENSION).8
+OPUS_BIN := libopus.$(EXTENSION).0
 
 BINS := $(SNDFILE_BIN) $(OGG_BIN) $(VORBIS_BIN) $(VORBISENC_BIN) $(FLAC_BIN) $(OPUS_BIN)
 BIN_ARCHIVE := sndfile.tar.gz
@@ -125,7 +125,6 @@ $(SNDFILE_BIN): $(OGG_BIN) $(VORBIS_BIN) $(VORBISENC_BIN)	\
 	&& cmake --build . \
 	&& cp -fL libsndfile.$(EXTENSION) $(WORK_DIR)/$(SNDFILE_BIN) \
 	&& strip -s $(WORK_DIR)/$(SNDFILE_BIN)
-	&& $(SNDFILE_POST_BUILD)
 
 
 $(BIN_ARCHIVE): build
