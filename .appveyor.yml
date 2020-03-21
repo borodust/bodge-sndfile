@@ -33,16 +33,16 @@ install:
   - curl -L http://bodge.borodust.org/files/install.sh | sh
 
 build_script:
-  - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%TARGET_ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
+  - set TARGET_ARTIFACT=%NAME%-%TARGET_ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%.tar.gz
   - set TARGET_SPEC=%TARGET_ARTIFACT%-spec.zip
   - pacman -S --needed --noconfirm base-devel mingw-w64-%TARGET_ARCH%-toolchain mingw-w64-%TARGET_ARCH%-pkg-config mingw-w64-%TARGET_ARCH%-cmake autogen nasm zip unzip
   - >
     sh -c "
     cd src/lib/
     && make CFLAGS=%CFLAGS% SUDO= PREFIX=/mingw%BITNESS%/
-    BODGE_DISABLE_OPTIMIZATIONS=%BODGE_DISABLE_OPTIMIZATIONS% clean build
+    BODGE_DISABLE_OPTIMIZATIONS=%BODGE_DISABLE_OPTIMIZATIONS% clean archive
     && ~/.bodge/bin/lisp regen-local-spec-and-zip --arch %TARGET_ARCH% \"$(cygpath -u '%APPVEYOR_BUILD_FOLDER%')\" %ASDF_SYSTEM% \"$(cygpath -u '%APPVEYOR_BUILD_FOLDER%\%TARGET_SPEC%')\""
-  - mv %APPVEYOR_BUILD_FOLDER%\src\lib\lib%NAME%.dll.bodged %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
+  - mv %APPVEYOR_BUILD_FOLDER%\src\lib\%NAME%.tar.gz %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
 
 artifacts:
   - path: $(TARGET_ARTIFACT)

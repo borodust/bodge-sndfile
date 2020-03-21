@@ -68,20 +68,20 @@ before_install:
       sudo add-apt-repository ppa:ondrej/autotools -y     # automake 1.15
       sudo add-apt-repository ppa:cz.nic-labs/knot-dns -y # pkg-config 0.29.2
       sudo apt-get update
-      sudo apt-get install -y autoconf automake-1.15 pkg-config m4 libtool
+      sudo apt-get install -y autoconf automake-1.15 pkg-config m4 libtool patchelf
     fi
 
 install:
   - curl -L http://bodge.borodust.org/files/install.sh | sh
 
 script:
-  - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
+  - export TARGET_FILE=$TRAVIS_BUILD_DIR/$NAME-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tar.gz
   - export TARGET_SPEC=$TARGET_FILE-spec.zip
-  - cd src/lib/ && make clean build
+  - cd src/lib/ && make clean archive
   - lisp regen-local-spec-and-zip --arch $TARGET_ARCH "$TRAVIS_BUILD_DIR" $ASDF_SYSTEM "$TARGET_SPEC"
 
 before_deploy:
-  - mv $TRAVIS_BUILD_DIR/src/lib/lib$NAME.$EXTENSION.bodged $TARGET_FILE
+  - mv $TRAVIS_BUILD_DIR/src/lib/$NAME.tar.gz $TARGET_FILE
 
 deploy:
   provider: releases
