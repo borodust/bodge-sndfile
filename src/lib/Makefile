@@ -1,5 +1,4 @@
 NAME = libsndfile
-EXTENSION =
 
 ifeq ($(BODGE_DISABLE_OPTIMIZATIONS),true)
 BODGE_OPUS_OPTIMIZATIONS = --disable-intrinsics
@@ -31,30 +30,32 @@ OPUS_BIN := libopus.$(EXTENSION).0
 BINS := $(SNDFILE_BIN) $(OGG_BIN) $(VORBIS_BIN) $(VORBISENC_BIN) $(FLAC_BIN) $(OPUS_BIN)
 BIN_ARCHIVE := sndfile.tar.gz
 
-BUILD_HOOKS :=
-
-ifeq ($CURRENT_OS,windows)
+ifeq ($(CURRENT_OS),windows)
 BUILD_HOOKS += build-windows
 endif
 
-ifeq ($CURRENT_OS,linux)
+ifeq ($(CURRENT_OS),linux)
 BUILD_HOOKS += build-linux
 endif
 
-ifeq ($CURRENT_OS,darwin)
+ifeq ($(CURRENT_OS),darwin)
 BUILD_HOOKS += build-darwin
 endif
 
-
+###
+### TARGETS
+###
 build: $(BINS) $(BUILD_HOOKS)
 
 
 build-windows:
 
 
-build-linux: $(SNDFILE_BIN)
-	patchelf --set-rpath '$ORIGIN/' $(SNDFILE_BIN)
-
+build-linux: $(BINS)
+	for BIN in $(BINS); do \
+		patchelf --set-rpath '$$ORIGIN/' $$BIN; \
+	done
+	patchelf --set-soname '$(SNDFILE_BIN).bodged' $(SNDFILE_BIN)
 
 build-darwin:
 
@@ -65,8 +66,9 @@ $(OGG_BIN):
 	&& ./configure --disable-static --enable-shared --with-pic --build=$(HOST) \
 			--prefix=$(PREFIX) \
 	&& make \
-	&& cp -fL src/.libs/$(OGG_BIN) $(WORK_DIR)/$(OGG_BIN) \
-	&& strip -s $(WORK_DIR)/$(OGG_BIN)
+	&& cp -fL src/.libs/$(OGG_BIN) $(WORK_DIR)/$(OGG_BIN)
+	ln -s $(OGG_BIN) libogg.$(EXTENSION)
+	strip -s $(OGG_BIN)
 
 
 $(VORBIS_BIN) $(VORBISENC_BIN):
@@ -77,8 +79,10 @@ $(VORBIS_BIN) $(VORBISENC_BIN):
 			--with-ogg-libraries=$(WORK_DIR)/ogg/src/.libs/ \
 			--with-ogg-includes=$(WORK_DIR)/ogg/include \
 	&& make \
-	&& cp -fL lib/.libs/$(VORBIS_BIN) lib/.libs/$(VORBISENC_BIN) $(WORK_DIR) \
-	&& strip -s $(WORK_DIR)/$(VORBIS_BIN) $(WORK_DIR)/$(VORBISENC_BIN)
+	&& cp -fL lib/.libs/$(VORBIS_BIN) lib/.libs/$(VORBISENC_BIN) $(WORK_DIR)
+	ln -s $(VORBIS_BIN) libvorbis.$(EXTENSION)
+	ln -s $(VORBISENC_BIN) libvorbisenc.$(EXTENSION)
+	strip -s $(VORBIS_BIN) $(VORBISENC_BIN)
 
 
 $(FLAC_BIN):
@@ -90,8 +94,9 @@ $(FLAC_BIN):
 		    --with-ogg-libraries=$(WORK_DIR)/ogg/src/.libs/ \
 		    --with-ogg-includes=$(WORK_DIR)/ogg/include \
 	&& make \
-	&& cp -fL src/libFLAC/.libs/$(FLAC_BIN) $(WORK_DIR)/$(FLAC_BIN) \
-	&& strip -s $(WORK_DIR)/$(FLAC_BIN)
+	&& cp -fL src/libFLAC/.libs/$(FLAC_BIN) $(WORK_DIR)/$(FLAC_BIN)
+	ln -s $(FLAC_BIN) libFLAC.$(EXTENSION)
+	strip -s $(FLAC_BIN)
 
 
 $(OPUS_BIN):
@@ -103,8 +108,9 @@ $(OPUS_BIN):
 		--disable-doc --with-pic --build=$(HOST) --prefix=$(PREFIX) \
 	&& make \
 	&& mkdir -p include-opus/opus/ && cp -fR include/* include-opus/opus/  \
-	&& cp -fL .libs/$(OPUS_BIN) $(WORK_DIR)/$(OPUS_BIN) \
-	&& strip -s $(WORK_DIR)/$(OPUS_BIN)
+	&& cp -fL .libs/$(OPUS_BIN) $(WORK_DIR)/$(OPUS_BIN)
+	ln -s $(OPUS_BIN) libopus.$(EXTENSION)
+	strip -s $(OPUS_BIN)
 
 
 $(SNDFILE_BIN): $(OGG_BIN) $(VORBIS_BIN) $(VORBISENC_BIN)	\
@@ -112,6 +118,7 @@ $(SNDFILE_BIN): $(OGG_BIN) $(VORBIS_BIN) $(VORBISENC_BIN)	\
 	cd sndfile/ \
 	&& mkdir -p build && cd build \
 	&& cmake -G"Unix Makefiles" \
+		-DCMAKE_BUILD_TYPE=Release  \
 		-DENABLE_EXTERNAL_LIBS=ON -DBUILD_SHARED_LIBS=ON \
 		-DOGG_INCLUDE_DIR=$(WORK_DIR)/ogg/include/ \
 		-DVORBIS_INCLUDE_DIR=$(WORK_DIR)/vorbis/include/ \
@@ -119,12 +126,13 @@ $(SNDFILE_BIN): $(OGG_BIN) $(VORBIS_BIN) $(VORBISENC_BIN)	\
 		-DFLAC_INCLUDE_DIR=$(WORK_DIR)/flac/include/ \
 		-DOPUS_INCLUDE_DIR=$(WORK_DIR)/opus/include-opus/ \
 		-DBUILD_EXAMPLES=OFF -DBUILD_PROGRAMS=OFF -DBUILD_TESTING=OFF \
+		-DENABLE_EXPERIMENTAL=OFF -DENABLE_CPACK=OFF -DENABLE_PACKAGE_CONFIG=OFF \
 		-DBUILD_REGTEST=OFF \
 		-DCMAKE_LIBRARY_PATH=$(WORK_DIR) \
 		-DCMAKE_POSITION_INDEPENDENT_CODE=ON .. \
 	&& cmake --build . \
-	&& cp -fL libsndfile.$(EXTENSION) $(WORK_DIR)/$(SNDFILE_BIN) \
-	&& strip -s $(WORK_DIR)/$(SNDFILE_BIN)
+	&& cp -fL libsndfile.$(EXTENSION) $(WORK_DIR)/$(SNDFILE_BIN)
+	strip -s $(SNDFILE_BIN)
 
 
 $(BIN_ARCHIVE): build
@@ -136,4 +144,4 @@ archive: $(BIN_ARCHIVE)
 
 clean:
 	git submodule foreach git clean -ffdx
-	rm -f $(BINS) $(BIN_ARCHIVE)
+	rm -f $(BINS) $(BIN_ARCHIVE) lib*.$(EXTENSION)
