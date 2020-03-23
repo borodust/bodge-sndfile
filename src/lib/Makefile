@@ -22,6 +22,9 @@ endif
 
 STRIP := strip -s
 
+BUILD_PREFIX=$(WORK_DIR)/build
+BUILD_LIBRARY_PATH := $(BUILD_PREFIX)/lib/
+
 #
 # WINDOWS
 #
@@ -30,11 +33,16 @@ ifeq ($(CURRENT_OS),windows)
 BUILD_HOOKS += build-windows
 
 SNDFILE_BIN := $(NAME).$(EXTENSION)
-OGG_BIN := libogg.$(EXTENSION).0
-VORBIS_BIN := libvorbis.$(EXTENSION).0
-VORBISENC_BIN := libvorbisenc.$(EXTENSION).2
-FLAC_BIN := libFLAC.$(EXTENSION).8
-OPUS_BIN := libopus.$(EXTENSION).0
+OGG_BIN := libogg-0.$(EXTENSION)
+VORBIS_BIN := libvorbis-0.$(EXTENSION)
+VORBISENC_BIN := libvorbisenc-2.$(EXTENSION)
+FLAC_BIN := libFLAC-8.$(EXTENSION)
+OPUS_BIN := libopus-0.$(EXTENSION)
+
+BUILD_LIBRARY_PATH := $(BUILD_PREFIX)/bin
+
+FLAC_LIBS := -lssp
+OPUS_LIBS := -lssp
 
 endif
 
@@ -77,7 +85,7 @@ endif
 #
 BINS := $(SNDFILE_BIN) $(OGG_BIN) $(VORBIS_BIN) $(VORBISENC_BIN) $(FLAC_BIN) $(OPUS_BIN)
 BIN_ARCHIVE := sndfile.tar.gz
-BUILD_PREFIX=$(WORK_DIR)/build
+
 
 ###
 ### TARGETS
@@ -96,23 +104,23 @@ build-linux: $(BINS)
 
 build-darwin:
 	install_name_tool -id "@rpath/$(SNDFILE_BIN)" $(SNDFILE_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(VORBISENC_BIN) "@loader_path/$(VORBISENC_BIN)" $(SNDFILE_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(VORBIS_BIN) "@loader_path/$(VORBIS_BIN)" $(SNDFILE_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(FLAC_BIN) "@loader_path/$(FLAC_BIN)" $(SNDFILE_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(OPUS_BIN) "@loader_path/$(OPUS_BIN)" $(SNDFILE_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(OGG_BIN) "@loader_path/$(OGG_BIN)" $(SNDFILE_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(VORBISENC_BIN) "@loader_path/$(VORBISENC_BIN)" $(SNDFILE_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(VORBIS_BIN) "@loader_path/$(VORBIS_BIN)" $(SNDFILE_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(FLAC_BIN) "@loader_path/$(FLAC_BIN)" $(SNDFILE_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(OPUS_BIN) "@loader_path/$(OPUS_BIN)" $(SNDFILE_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(OGG_BIN) "@loader_path/$(OGG_BIN)" $(SNDFILE_BIN)
 
 	install_name_tool -id "@rpath/$(OGG_BIN)" $(OGG_BIN)
 
 	install_name_tool -id "@rpath/$(FLAC_BIN)" $(FLAC_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(OGG_BIN) "@loader_path/$(OGG_BIN)" $(FLAC_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(OGG_BIN) "@loader_path/$(OGG_BIN)" $(FLAC_BIN)
 
 	install_name_tool -id "@rpath/$(VORBIS_BIN)" $(VORBIS_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(OGG_BIN) "@loader_path/$(OGG_BIN)" $(VORBIS_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(OGG_BIN) "@loader_path/$(OGG_BIN)" $(VORBIS_BIN)
 
 	install_name_tool -id "@rpath/$(VORBISENC_BIN)" $(VORBISENC_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(OGG_BIN) "@loader_path/$(OGG_BIN)" $(VORBISENC_BIN)
-	install_name_tool -change $(BUILD_PREFIX)/lib/$(VORBIS_BIN) "@loader_path/$(VORBIS_BIN)" $(VORBISENC_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(OGG_BIN) "@loader_path/$(OGG_BIN)" $(VORBISENC_BIN)
+	install_name_tool -change $(BUILD_LIBRARY_PATH)/$(VORBIS_BIN) "@loader_path/$(VORBIS_BIN)" $(VORBISENC_BIN)
 
 	install_name_tool -id "@rpath/$(OPUS_BIN)" $(OPUS_BIN)
 
@@ -123,7 +131,7 @@ $(OGG_BIN):
 	&& ./configure --disable-static --enable-shared --with-pic --build=$(HOST) \
 			--prefix=$(BUILD_PREFIX) \
 	&& make && make install
-	cp -fL $(BUILD_PREFIX)/lib/$(OGG_BIN) $(WORK_DIR)/$(OGG_BIN)
+	cp -fL $(BUILD_LIBRARY_PATH)/$(OGG_BIN) $(WORK_DIR)/$(OGG_BIN)
 	$(STRIP) $(OGG_BIN)
 
 
@@ -137,33 +145,34 @@ $(VORBIS_BIN) $(VORBISENC_BIN): $(OGG_BIN)
 			--with-ogg=$(BUILD_PREFIX) \
 			--prefix=$(BUILD_PREFIX) \
 	&& make && make install
-	cp -fL $(BUILD_PREFIX)/lib/$(VORBIS_BIN) $(BUILD_PREFIX)/lib/$(VORBISENC_BIN) $(WORK_DIR)
+	cp -fL $(BUILD_LIBRARY_PATH)/$(VORBIS_BIN) $(BUILD_LIBRARY_PATH)/$(VORBISENC_BIN) $(WORK_DIR)
 	$(STRIP) $(VORBIS_BIN) $(VORBISENC_BIN)
 
 
 $(FLAC_BIN): $(OGG_BIN)
 	cd flac/ \
 	&& ./autogen.sh \
-	&& ./configure --disable-static --enable-shared --disable-thorough-tests \
+	&& ./configure LIBS="$(FLAC_LIBS)" \
+			--disable-static --enable-shared --disable-thorough-tests \
 		    	--disable-doxygen-docs --disable-examples --disable-cpplibs \
 		    	--with-pic --disable-oggtest --build=$(HOST) \
 			--with-ogg=$(BUILD_PREFIX) \
 			--prefix=$(BUILD_PREFIX) \
 	&& make && make install
-	cp -fL $(BUILD_PREFIX)/lib/$(FLAC_BIN) $(WORK_DIR)/$(FLAC_BIN)
+	cp -fL $(BUILD_LIBRARY_PATH)/$(FLAC_BIN) $(WORK_DIR)/$(FLAC_BIN)
 	$(STRIP) $(FLAC_BIN)
 
 
 $(OPUS_BIN):
 	cd opus/ \
 	&& ./autogen.sh \
-	&& ./configure X86_SSE4_1_CFLAGS="" X86_AVX_CFLAGS="" \
+	&& ./configure LIBS="$(OPUS_LIBS)" X86_SSE4_1_CFLAGS="" X86_AVX_CFLAGS="" \
 		$(BODGE_OPUS_OPTIMIZATIONS) \
 		--disable-static --enable-shared --disable-extra-programs \
 		--disable-doc --with-pic --build=$(HOST) \
 		--prefix=$(BUILD_PREFIX) \
 	&& make && make install
-	cp -fL $(BUILD_PREFIX)/lib/$(OPUS_BIN) $(WORK_DIR)/$(OPUS_BIN)
+	cp -fL $(BUILD_LIBRARY_PATH)/$(OPUS_BIN) $(WORK_DIR)/$(OPUS_BIN)
 	$(STRIP) $(OPUS_BIN)
 
 
