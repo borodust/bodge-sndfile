@@ -7,7 +7,8 @@
 (defmacro %catch-sound-errors ((&optional snd-file) &body body)
   (let ((handle (or snd-file '(cffi:null-pointer))))
     (once-only (handle)
-      `(prog1 (progn ,@body)
+      `(unwind-protect
+            (progn ,@body)
          (when (/= (%sndfile:error ,handle) %sndfile:+err-no-error+)
            (error "SNDFILE ERROR: ~A" (cffi:foreign-string-to-lisp
                                        (%sndfile:strerror ,handle))))))))
@@ -104,7 +105,7 @@
   (format nil :type list :read-only t))
 
 
-(defmacro with-sound-file-handle ((file handle-ctor) &body body)
+(defmacro with-sound-file-handle ((file handle-ctor &key (scale-float-samples t)) &body body)
   (with-gensyms (sound-info handle)
     `(with-sound-info (,sound-info)
        (let* ((,handle (%catch-sound-errors () (funcall ,handle-ctor ,sound-info)))
@@ -115,6 +116,13 @@
                                        (parse-format (,sound-info :format)))))
          (unwind-protect
               (%catch-sound-errors (,handle)
+                ;; autoscale floats
+                (%sf:command ,handle
+                             %sf:+c-set-scale-float-int-read+
+                             (cffi:null-pointer)
+                             (if ,scale-float-samples
+                                 %sf:+true+
+                                 %sf:+false+))
                 ,@body)
            (%sndfile:close ,handle))))))
 
