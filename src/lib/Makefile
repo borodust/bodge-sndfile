@@ -23,7 +23,7 @@ endif
 STRIP := strip -s
 
 BUILD_PREFIX=$(WORK_DIR)/build
-BUILD_LIBRARY_PATH := $(BUILD_PREFIX)/lib/
+BUILD_LIBRARY_PATH := $(BUILD_PREFIX)/lib
 
 #
 # WINDOWS
