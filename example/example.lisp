@@ -12,19 +12,19 @@
 
 (defun run ()
   "Native example reading metadata with thin API"
-  (c-with ((sf-info %sf:info :clear t))
-    (let ((sf-file (%sf:open *sample-file* %sf:+m-read+ (sf-info &))))
+  (c-with ((sf-info %sndfile:info :clear t))
+    (let ((sf-file (%sndfile:open *sample-file* %sndfile:+m-read+ (sf-info &))))
       (when (cffi:null-pointer-p sf-file)
         (error "Failed to open sound file ~A: ~A" *sample-file*
-               (cffi:foreign-string-to-lisp (%sf:strerror sf-file))))
+               (cffi:foreign-string-to-lisp (%sndfile:strerror sf-file))))
       (flet ((get-string (tag)
                (cffi:foreign-string-to-lisp
-                (%sf:get-string sf-file tag))))
+                (%sndfile:get-string sf-file tag))))
         (format t "File info: ~&Title: ~A~&Artist: ~A~&Date: ~A
 Channels: ~A ~&Sample Rate: ~A ~&Frames: ~A"
-                (get-string %sf:+str-title+)
-                (get-string %sf:+str-artist+)
-                (get-string %sf:+str-date+)
+                (get-string %sndfile:+str-title+)
+                (get-string %sndfile:+str-artist+)
+                (get-string %sndfile:+str-date+)
 
                 (sf-info :channels)
                 (sf-info :samplerate)
@@ -33,5 +33,5 @@ Channels: ~A ~&Sample Rate: ~A ~&Frames: ~A"
 
 (defun decode ()
   "Lispified decoding. Returns PCM data of *sample-file* in the array of (signed-byte 16) type."
-  (sf:with-open-sound-file (sf-file *sample-file*)
-    (sf:read-short-samples-into-array sf-file)))
+  (sndfile:with-open-sound-file (sf-file *sample-file*)
+    (sndfile:read-short-samples-into-array sf-file)))

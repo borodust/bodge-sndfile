@@ -1,12 +1,16 @@
-(uiop:define-package :%sndfile
-  (:nicknames :%sf)
-  (:use))
-
-
-(claw:defwrapper (sndfile::bodge-sndfile
+(claw:defwrapper (:bodge-sndfile/wrapper
                   (:headers "sndfile.h")
                   (:includes :sndfile-includes)
-                  (:include-definitions "(sf|SF).?_\\w*"))
+                  (:targets ((:and :x86-64 :linux) "x86_64-pc-linux-gnu")
+                            ((:and :x86-64 :windows) "x86_64-pc-windows-gnu")
+                            ((:and :x86-64 :drawin) "x86_64-apple-darwin-gnu"))
+                  (:persistent :bodge-sndfile-bindings
+                   :asd-path "../bodge-sndfile-bindings.asd"
+                   :bindings-path "../bindings/"
+                   :depends-on (:claw-utils))
+                  (:include-definitions "(sf|SF).?_\\w*")
+                  (:include-sources "sndfile.h"))
+
   :in-package :%sndfile
   :trim-enum-prefix t
   :recognize-bitfields t

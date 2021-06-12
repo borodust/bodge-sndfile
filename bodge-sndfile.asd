@@ -5,13 +5,23 @@
   :mailto "dev@borodust.org"
   :license "MIT"
   :depends-on (:alexandria :static-vectors :cffi :cffi-c-ref
-               :claw :claw-utils :bodge-libc-essentials)
+               :bodge-libc-essentials :bodge-sndfile-bindings)
   :serial t
   :pathname "src/"
   :components ((:file "packages")
-               (:file "claw")
-               (:file "sndfile")
-               (:module :spec)
+               (:file "sndfile")))
+
+
+(asdf:defsystem :bodge-sndfile/wrapper
+  :description "Wrapper over libsndfile for cl-bodge system"
+  :version "1.0.0"
+  :author "Pavel Korolev"
+  :mailto "dev@borodust.org"
+  :license "MIT"
+  :depends-on (:alexandria :uiop :cffi :claw-utils :claw)
+  :pathname "src/"
+  :serial t
+  :components ((:file "claw")
                (:module :sndfile-includes :pathname "lib/sndfile/build/src/")))
 
 

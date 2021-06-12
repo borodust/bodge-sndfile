@@ -117,12 +117,12 @@
          (unwind-protect
               (%catch-sound-errors (,handle)
                 ;; autoscale floats
-                (%sf:command ,handle
-                             %sf:+c-set-scale-float-int-read+
+                (%sndfile:command ,handle
+                             %sndfile:+c-set-scale-float-int-read+
                              (cffi:null-pointer)
                              (if ,scale-float-samples
-                                 %sf:+true+
-                                 %sf:+false+))
+                                 %sndfile:+true+
+                                 %sndfile:+false+))
                 ,@body)
            (%sndfile:close ,handle))))))
 
