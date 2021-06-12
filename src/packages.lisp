@@ -1,6 +1,6 @@
 (cl:defpackage :sndfile
   (:nicknames :sf)
-  (:use :cl :claw :alexandria :cffi-c-ref)
+  (:use :cl :alexandria :cffi-c-ref)
   (:export #:with-open-sound-file
            #:with-sound-file-from-stream
 
