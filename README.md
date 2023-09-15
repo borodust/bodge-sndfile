@@ -9,7 +9,7 @@ cross-platform library for reading and writing files containing sampled sound.
 # Requirements
 
 * ASDF/Quicklisp
-* x86_64/i686 GNU/Linux, macOS or Windows
+* x86_64/i686/ppc64le/ppc64 GNU/Linux, macOS or Windows
 
 
 # Loading
